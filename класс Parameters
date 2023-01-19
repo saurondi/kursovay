@@ -1,0 +1,16 @@
+namespace Авторизация
+{
+    public class Parameters
+    {
+        public int N;
+        public int Nsquare;
+        public int MagicNumber;
+
+        public Parameters(int n, int magicNumber)
+        {
+            N = n;
+            Nsquare = N * N;
+            MagicNumber = magicNumber;
+        }
+    }
+}
