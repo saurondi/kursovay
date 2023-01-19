@@ -1,0 +1,67 @@
+using MySql.Data.MySqlClient;
+using NUnit.Framework;
+using System;
+using System.Data;
+using Авторизация;
+
+namespace MagicTest
+{
+    public class Tests
+    {
+        [SetUp]
+        public void Setup()
+        {
+
+        }
+
+        [Test]
+        public void Contentword()
+        {
+            String loginUser = "Admin";
+            string check = "Admin"+"123";
+
+            DB db = new DB();
+
+            DataTable table = new DataTable();
+
+            MySqlDataAdapter adapter = new MySqlDataAdapter();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `msquare` WHERE `login` = @uL", db.getConnection());
+            command.Parameters.Add("@uL", MySqlDbType.VarChar).Value = loginUser;
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+
+            Assert.AreNotEqual(check, table);            
+        }
+
+        [Test]
+        public void MagicSumTest()
+        {
+            int a=3, b=15;
+            Parameters parameters = new Parameters(a,b);
+
+            Assert.AreEqual(parameters.MagicNumber, b);
+        }
+
+        [Test]
+        public void InputSymbolTest()
+        {
+            int a = 3, b = 15;
+            int test = 4;
+            Parameters parameters = new Parameters(a, b);
+
+            Assert.AreNotEqual(parameters.N, test);
+        }
+
+        [Test]
+        public void CountSymbolTest()
+        {
+            int a = 3, b = 15;
+            int check = a * a;
+            Parameters parameters = new Parameters(a, b);
+
+            Assert.AreEqual(parameters.Nsquare, check);
+        }
+    }
+}
