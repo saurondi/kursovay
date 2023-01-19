@@ -1,0 +1,340 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+
+
+namespace Авторизация
+{
+
+    public partial class Mainprogramm : Form
+    {
+        
+        static int[,] square;
+        static int row, col;
+        static bool done;
+        static Queue<int> numbers;
+        public Mainprogramm()
+        {
+            InitializeComponent();
+        }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void closeBat_Click(object sender, EventArgs e)
+        {
+            Form Form1 = new LoginForm();
+            Form1.Show();
+            this.Close();
+
+        }
+        private void closeBat_MouseEnter(object sender, EventArgs e)
+        {
+            closeBat.ForeColor = Color.Purple;
+        }
+
+        private void closeBat_MouseLeave(object sender, EventArgs e)
+        {
+            closeBat.ForeColor = Color.Black;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            
+            if (NumBox.Text == "")
+            {
+                MessageBox.Show("Введите пожалуйста число!");
+                return;
+            }
+            int N = int.Parse(NumBox.Text);
+            if (N == 3 || N == 4)
+            {
+                int sum = ((N * N) + 1) * N / 2;
+                Parameters Start = new Parameters(N, sum);
+                SolveSquare(Start);               
+            }
+            else
+            {
+                MessageBox.Show("Число не доступно, допустимые числа 3 и 4!");
+            }
+            
+            if (N == 3)
+            {
+                SaveFileDialog open = new SaveFileDialog();
+                open.Filter = "Image Files(*.BMP)|*.BMP|Image Files(*.JPG)|*.JPG|Image Files(*.GIF)|*.GIF|Image Files(*.PNG)|*.PNG|All files (*.*)|*.*"; //форматы сохранения
+                Image img = new Bitmap(640,640); // размер картинки
+                Graphics g = Graphics.FromImage(img);
+                g.DrawString($"{square[0, 0] + " " + square[0, 1] + " " + square[0, 2]}\n"
+                    + $"{square[1, 0] + " " + square[1, 1] + " " + square[1, 2]}\n"
+                    + $"{square[2, 0] + " " + square[2, 1] + " " + square[2, 2]}",
+                    new Font("Times New Romans", (float)20), //текст на картинке, шрифт и его размер
+                new SolidBrush(Color.White), img.Width/2, img.Height/2); //месторасположения текста
+                if (open.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        img.Save(open.FileName, System.Drawing.Imaging.ImageFormat.Jpeg); //путь и имя сохранения файла
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Невозможно сохранить изображение", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    MessageBox.Show("Квадрат успешно сохранён с изображение");
+                }
+                else
+                {
+                    MessageBox.Show("Вы не сохранили квадрат!");
+                }
+                 
+
+                g = null; //обнуляем переменные во избежании переполнения памяти
+                img = null;
+            }
+            if(N == 4)
+            {
+                SaveFileDialog open = new SaveFileDialog();
+                open.Filter = "Image Files(*.BMP)|*.BMP|Image Files(*.JPG)|*.JPG|Image Files(*.GIF)|*.GIF|Image Files(*.PNG)|*.PNG|All files (*.*)|*.*";
+                Image img = new Bitmap(640, 640);
+                Graphics g = Graphics.FromImage(img);
+                g.DrawString($"{square[0, 0] + " " + square[0, 1] + " " + square[0, 2] + " " + square[0, 3]}\n" 
+                    + $"{square[1, 0] + " " + square[1, 1] + " " + square[1, 2] + " " + square[1, 3]}\n"
+                    + $"{square[2, 0] + " " + square[2, 1] + " " + square[2, 2] + " " + square[2, 3]}\n"
+                    + $"{square[3, 0] + " " + square[3, 1] + " " + square[3, 2] + " " + square[3, 3]}",
+                    new Font("Times New Romans", (float)20), //текст на картинке, шрифт и его размер
+                new SolidBrush(Color.White), img.Width / 2, img.Height / 2); //месторасположения текста
+                if (open.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        img.Save(open.FileName, System.Drawing.Imaging.ImageFormat.Jpeg); //путь и имя сохранения файла
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Невозможно сохранить изображение", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+                g = null; //обнуляем переменные во избежании переполнения памяти
+                img = null;
+                MessageBox.Show("Квадрат успешно сохранён с изображение");
+            }
+        }
+        public static void SolveSquare(Parameters _params)
+        {
+
+            square = new int[_params.N, _params.N];
+            numbers = new Queue<int>();
+            sozdanie(_params);
+
+            for (int i = _params.Nsquare; i > 0; --i)
+            {
+                numbers.Enqueue(i);
+            }
+
+            row = col = 0;
+            done = false;
+
+            vstavitchisla(_params);
+        }
+
+        static void sozdanie(Parameters _params)
+        {
+            int i, j, n = _params.N;
+
+            for (i = 0; i < n; ++i)
+            {
+                for (j = 0; j < n; ++j)
+                {
+                    square[i, j] = 0;
+                }
+            }
+        }
+
+        static void vstavitchisla(Parameters _params)
+        {
+            int k, n, m, e;
+
+            if ((numbers.Count > 0) && ValidPos(_params))
+            {
+                n = numbers.Count;
+                k = 0;
+                do
+                {
+                    m = numbers.Dequeue();
+                    if ((e = square[row, col]) != 0)
+                    {
+                        numbers.Enqueue(e);
+                    }
+                    square[row, col] = m;
+                    ++k;
+                    if (CheckCube(_params))
+                    {
+                        if (numbers.Count == 0)
+                        {
+                            done = true;
+                            Showcube(_params);
+                        }
+                        else
+                        {
+                            sleeduyshee(_params);
+                            vstavitchisla(_params);
+                        }
+                    }
+                } while (k < n && !done);
+
+                if (!done)
+                {
+                    numbers.Enqueue(square[row, col]);
+                    square[row, col] = 0;
+                    PreviousPos(_params);
+                }
+            }
+        }
+
+        public static bool ValidPos(Parameters _params)
+        {
+            int n = _params.N;
+
+            return row >= 0 && row < n && col >= 0 && col < n;
+        }
+
+        static bool CheckCube(Parameters _params)
+        {
+            int row = 0, col = 0, n = _params.N;
+
+            while (row < n && HorizontalCheck(_params, row))
+            {
+                ++row;
+            }
+            while (col < n && VerticalCheck(_params, col))
+            {
+                ++col;
+            }
+            return row == n && col == n && Diagonal_1_Check(_params) && Diagonal_2_Check(_params);
+        }
+
+        static bool CkeckSum(Parameters _params, int index, int sum)
+        {
+            int n = _params.N, magicNr = _params.MagicNumber;
+
+            return sum == 0 || (index < n && sum < magicNr) || (index == n && sum == magicNr);
+        }
+
+        static bool HorizontalCheck(Parameters _params, int row)
+        {
+            int col = 0, e, s = 0;
+
+            while (col < _params.N && (e = square[row, col]) != 0)
+            {
+                s += e;
+                ++col;
+            }
+            return CkeckSum(_params, col, s);
+        }
+
+        static bool VerticalCheck(Parameters _params, int col)
+        {
+            int row = 0, e, s = 0;
+
+            while (row < _params.N && (e = square[row, col]) != 0)
+            {
+                s += e;
+                ++row;
+            }
+            return CkeckSum(_params, row, s);
+        }
+
+        static bool Diagonal_1_Check(Parameters _params)
+        {
+            int row = 0, e, s = 0;
+
+            while (row < _params.N && (e = square[row, row]) != 0)
+            {
+                s += e;
+                ++row;
+            }
+            return CkeckSum(_params, row, s);
+        }
+
+        static bool Diagonal_2_Check(Parameters _params)
+        {
+            int row = 0, col = 2, e, s = 0;
+
+            while ((row < _params.N) && (col >= 0) && ((e = square[row, col]) != 0))
+            {
+                s += e;
+                ++row;
+                --col;
+            }
+            return CkeckSum(_params, row, s);
+        }
+
+        static void sleeduyshee(Parameters _params)
+        {
+            if (col == _params.N - 1)
+            {
+                col = 0;
+                ++row;
+            }
+            else
+            {
+                ++col;
+            }
+        }
+
+        static void PreviousPos(Parameters _params)
+        {
+            if (col == 0)
+            {
+                col = _params.N - 1;
+                --row;
+            }
+            else
+            {
+                --col;
+            }
+        }
+
+        static void Showcube(Parameters _params)
+        {
+            int i, j, n = _params.N;
+
+            Console.WriteLine($"\nМагическое число = {_params.MagicNumber}\n");
+            for (i = 0; i < n; i++)
+            {
+                for (j = 0; j < n; ++j)
+                {
+                    Console.Write($"{square[i, j]} ");
+                }
+            }
+        }
+        Point Lastpoint;
+        private void Form2_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                this.Left += e.X - Lastpoint.X;
+                this.Top += e.Y - Lastpoint.Y;
+            }
+        }
+
+        private void regulations_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("\t\t\t Правила\n\nСуть данной программы, вы вводите число 3 или 4, после необходимо нажажать на кнопку 'Сгенерировать квадрат'.\n\nЕсли все необходимые условия выполнились, программа предложит вам сохранить изображение в любое удобное для вас место.");
+        }
+
+        private void Form2_MouseDown(object sender, MouseEventArgs e)
+        {
+            Lastpoint = new Point(e.X, e.Y);
+        } 
+    }
+}
