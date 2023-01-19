@@ -1,0 +1,145 @@
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Авторизация
+{
+    public partial class RegisterForm : Form
+    {
+        public RegisterForm()
+        {
+            InitializeComponent();
+        }
+
+        private void closebatton_Click(object sender, EventArgs e)
+        {
+            Form form = new LoginForm();
+            form.Show();
+            this.Hide();
+        }
+
+        private void closebatton_MouseEnter(object sender, EventArgs e)
+        {
+            closebatton.ForeColor = Color.Green;
+        }
+
+        private void closebatton_MouseLeave(object sender, EventArgs e)
+        {
+            closebatton.ForeColor = Color.White;
+        }
+
+        Point Lastpoint;
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                this.Left += e.X - Lastpoint.X;
+                this.Top += e.Y - Lastpoint.Y;
+            }
+        }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            Lastpoint = new Point(e.X, e.Y);
+        }
+
+        private void RegisterForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                this.Left += e.X - Lastpoint.X;
+                this.Top += e.Y - Lastpoint.Y;
+            }
+        }
+
+        private void RegisterForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            Lastpoint = new Point(e.X, e.Y);
+        }
+
+        private void RegBut_Click(object sender, EventArgs e)
+        {
+            if (Login.Text == "")
+            {
+                MessageBox.Show("Введите логин");
+                return;
+            }
+            if (Password.Text == "")
+            {
+                MessageBox.Show("Ведите пароль");
+                return;
+            }
+
+            String login = Login.Text;
+            if (checkUser(login))
+                return;
+            
+            DB db = new DB();
+            MySqlCommand command = new MySqlCommand("INSERT INTO `msquare` (`login`, `pass`) VALUES (@login, @pass)", db.getConnection());
+            
+            command.Parameters.Add("@login", MySqlDbType.VarChar).Value = Login.Text;
+            command.Parameters.Add("@pass", MySqlDbType.VarChar).Value = Password.Text;
+
+            db.OpenConnection();
+
+            if (command.ExecuteNonQuery() == 1)
+            {
+                MessageBox.Show("Аккаунт был создан");
+                Form form1 = new LoginForm();
+                form1.Show();
+                this.Hide();
+            }
+            else
+                MessageBox.Show("Аккаунт не был создан");
+
+            db.CloseConnection();
+        }
+
+        private void VisPass_CheckedChanged(object sender, EventArgs e)
+        {
+            bool vis = VisPass.Checked;
+            if (vis)
+            {
+                Password.UseSystemPasswordChar = false;
+            }
+            else
+            {
+                Password.UseSystemPasswordChar = true;
+            }
+        }
+
+        public Boolean checkUser(string login)
+        {
+            DB db = new DB();
+
+            DataTable table = new DataTable();
+
+            MySqlDataAdapter adapter = new MySqlDataAdapter();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `msquare` WHERE `login` = @uL", db.getConnection());
+            command.Parameters.Add("@uL", MySqlDbType.VarChar).Value = login;
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+            
+
+            if(table.Rows.Count > 0)
+            {
+                MessageBox.Show("Пользователь с таким логином уже существует, введите новый");
+                return true;
+            }
+            else
+            {
+                return false;
+            }         
+        }
+    }
+}
